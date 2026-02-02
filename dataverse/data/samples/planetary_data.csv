@@ -1,0 +1,9 @@
+planet,distance_from_sun_au,diameter_km,mass_earth_units,moons,orbital_period_days,temperature_celsius,type
+Mercury,0.39,4879,0.055,0,88,167,Terrestrial
+Venus,0.72,12104,0.815,0,225,464,Terrestrial
+Earth,1.0,12742,1.0,1,365,15,Terrestrial
+Mars,1.52,6779,0.107,2,687,-65,Terrestrial
+Jupiter,5.2,139820,317.8,95,4333,-110,Gas Giant
+Saturn,9.58,116460,95.2,146,10759,-140,Gas Giant
+Uranus,19.22,50724,14.5,27,30687,-195,Ice Giant
+Neptune,30.05,49244,17.1,14,60190,-200,Ice Giant

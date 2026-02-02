@@ -1,0 +1,26 @@
+country,population_millions,gdp_billions,growth_rate,life_expectancy,continent
+China,1412,17734,0.2,77,Asia
+India,1380,3730,0.8,70,Asia
+USA,331,25462,0.4,79,North America
+Indonesia,274,1319,0.9,72,Asia
+Pakistan,225,346,1.9,67,Asia
+Brazil,213,1608,0.7,76,South America
+Nigeria,211,440,2.4,55,Africa
+Bangladesh,166,460,1.0,73,Asia
+Russia,143,1778,-0.1,72,Europe
+Mexico,130,1290,0.8,75,North America
+Japan,125,4937,-0.3,84,Asia
+Ethiopia,120,126,2.5,67,Africa
+Philippines,113,394,1.3,71,Asia
+Egypt,109,404,1.8,72,Africa
+Vietnam,98,409,0.9,75,Asia
+Germany,83,4457,0.0,81,Europe
+Turkey,85,905,0.8,77,Asia
+Iran,86,359,1.0,77,Asia
+Thailand,70,536,0.2,77,Asia
+UK,67,3189,0.3,81,Europe
+France,65,2958,0.2,82,Europe
+Italy,59,2107,-0.2,83,Europe
+South Africa,60,419,1.2,64,Africa
+South Korea,52,1809,-0.1,83,Asia
+Canada,38,1991,0.8,82,North America

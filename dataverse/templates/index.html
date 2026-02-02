@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataVerse - 3D Data Visualization</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">◈</span>
+                <h1>DataVerse</h1>
+            </div>
+            <nav class="nav">
+                <button class="nav-btn" onclick="showPanel('upload')">📤 Upload</button>
+                <button class="nav-btn" onclick="showPanel('datasets')">📁 Datasets</button>
+                <button class="nav-btn" onclick="showPanel('samples')">🎯 Samples</button>
+            </nav>
+        </header>
+
+        <div class="main-container">
+            <!-- Left Panel - Controls -->
+            <aside class="sidebar" id="sidebar">
+                
+                <!-- Upload Section -->
+                <div class="panel-section" id="upload-panel">
+                    <h2>📤 Upload Data</h2>
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="file-input" accept=".csv,.json,.xlsx,.xls" hidden>
+                        <div class="upload-content">
+                            <div class="upload-icon">📊</div>
+                            <p>Drop your data file here</p>
+                            <span class="upload-hint">or click to browse</span>
+                            <div class="file-types">CSV, JSON, Excel</div>
+                        </div>
+                    </div>
+                    <div id="upload-status"></div>
+                </div>
+
+                <!-- Analysis Results -->
+                <div class="panel-section hidden" id="analysis-panel">
+                    <h2>🔍 Data Analysis</h2>
+                    <div id="dataset-info"></div>
+                    <div id="suggestions-list"></div>
+                </div>
+
+                <!-- Chart Controls -->
+                <div class="panel-section hidden" id="controls-panel">
+                    <h2>⚙️ Visualization</h2>
+                    
+                    <div class="control-group">
+                        <label>Chart Type</label>
+                        <select id="chart-type" class="select">
+                            <option value="scatter3d">3D Scatter Plot</option>
+                            <option value="bar3d">3D Bar Chart</option>
+                            <option value="surface">3D Surface</option>
+                            <option value="network">Network Graph</option>
+                            <option value="timeseries3d">3D Time Series</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" id="axis-controls">
+                        <label>X Axis</label>
+                        <select id="x-axis" class="select"></select>
+                        
+                        <label>Y Axis</label>
+                        <select id="y-axis" class="select"></select>
+                        
+                        <label>Z Axis</label>
+                        <select id="z-axis" class="select"></select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color By</label>
+                        <select id="color-by" class="select">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Size By</label>
+                        <select id="size-by" class="select">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Color Scheme</label>
+                        <div class="color-schemes">
+                            <button class="color-btn active" data-scheme="neon" style="background: linear-gradient(135deg, #00f5ff, #ff00ff);"></button>
+                            <button class="color-btn" data-scheme="fire" style="background: linear-gradient(135deg, #ff4500, #ffff00);"></button>
+                            <button class="color-btn" data-scheme="ocean" style="background: linear-gradient(135deg, #0066ff, #00ffff);"></button>
+                            <button class="color-btn" data-scheme="forest" style="background: linear-gradient(135deg, #00ff00, #66ff00);"></button>
+                            <button class="color-btn" data-scheme="purple" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);"></button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="show-grid" checked>
+                            Show Grid
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-rotate">
+                            Auto Rotate
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="animation-mode">
+                            Animate Over Time
+                        </label>
+                    </div>
+
+                    <div class="control-actions">
+                        <button class="btn btn-primary" onclick="updateVisualization()">🔄 Update</button>
+                        <button class="btn btn-secondary" onclick="resetCamera()">📷 Reset View</button>
+                    </div>
+                </div>
+
+                <!-- Export Controls -->
+                <div class="panel-section" id="export-panel">
+                    <h2>💾 Export</h2>
+                    <div class="export-buttons">
+                        <button class="btn btn-export" onclick="exportImage('png')">🖼️ PNG</button>
+                        <button class="btn btn-export" onclick="exportImage('svg')">📐 SVG</button>
+                        <button class="btn btn-export" onclick="exportVideo()">🎥 Video</button>
+                        <button class="btn btn-export" onclick="getShareLink()">🔗 Share</button>
+                        <button class="btn btn-export" onclick="getEmbedCode()">📋 Embed</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Canvas Area -->
+            <main class="canvas-container">
+                <div id="canvas-wrapper">
+                    <canvas id="three-canvas"></canvas>
+                    <div id="loading-overlay" class="hidden">
+                        <div class="spinner"></div>
+                        <span>Loading visualization...</span>
+                    </div>
+                </div>
+                
+                <!-- Data Point Tooltip -->
+                <div id="tooltip" class="tooltip hidden"></div>
+                
+                <!-- Stats Overlay -->
+                <div id="stats-overlay" class="stats-overlay">
+                    <div class="stat">
+                        <span class="stat-label">Points:</span>
+                        <span class="stat-value" id="point-count">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Chart:</span>
+                        <span class="stat-value" id="chart-label">None</span>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Sample Data Modal -->
+        <div id="samples-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🎯 Sample Datasets</h2>
+                    <button class="close-btn" onclick="hideModal('samples-modal')">×</button>
+                </div>
+                <div class="samples-grid">
+                    <div class="sample-card" onclick="loadSample('stocks')">
+                        <div class="sample-icon">📈</div>
+                        <h3>Stock Prices</h3>
+                        <p>Historical stock data with price, volume, and time</p>
+                    </div>
+                    <div class="sample-card" onclick="loadSample('population')">
+                        <div class="sample-icon">🌍</div>
+                        <h3>Population Data</h3>
+                        <p>Country populations, GDP, and growth rates</p>
+                    </div>
+                    <div class="sample-card" onclick="loadSample('sales')">
+                        <div class="sample-icon">🛒</div>
+                        <h3>Sales Data</h3>
+                        <p>Product sales across regions and time periods</p>
+                    </div>
+                    <div class="sample-card" onclick="loadSample('covid')">
+                        <div class="sample-icon">🦠</div>
+                        <h3>COVID-19 Cases</h3>
+                        <p>Global pandemic tracking data over time</p>
+                    </div>
+                    <div class="sample-card" onclick="loadSample('planets')">
+                        <div class="sample-icon">🪐</div>
+                        <h3>Planetary Data</h3>
+                        <p>Solar system planets with size, distance, moons</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Datasets Modal -->
+        <div id="datasets-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>📁 Your Datasets</h2>
+                    <button class="close-btn" onclick="hideModal('datasets-modal')">×</button>
+                </div>
+                <div id="datasets-list" class="datasets-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/visualizations.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
