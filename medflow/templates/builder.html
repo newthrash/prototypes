@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if workflow %}{{ workflow.name }}{% else %}New Workflow{% endif %} - MedFlow</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+            color: #1e293b;
+        }
+        
+        .builder-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Header */
+        .builder-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 100;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .back-btn {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        
+        .workflow-name-input {
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: #1e293b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            min-width: 200px;
+        }
+        
+        .workflow-name-input:focus {
+            outline: none;
+            background: #f1f5f9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        
+        .btn-primary {
+            background: #0f766e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #115e59;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 80px 16px 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .node-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .palette-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        
+        .palette-item:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+        
+        .palette-item:active {
+            cursor: grabbing;
+        }
+        
+        .palette-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .palette-info {
+            flex: 1;
+        }
+        
+        .palette-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        
+        .palette-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        /* Canvas */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #f8fafc;
+            background-image: 
+                radial-gradient(circle, #cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+            margin-top: 60px;
+        }
+        
+        .workflow-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        /* Nodes */
+        .workflow-node {
+            position: absolute;
+            width: 240px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .workflow-node.selected {
+            border-color: #0f766e;
+            box-shadow: 0 4px 20px rgba(15, 118, 110, 0.2);
+        }
+        
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .node-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+        
+        .node-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .node-body {
+            padding: 12px;
+        }
+        
+        .node-config-summary {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        
+        .node-ports {
+            position: absolute;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            background: #cbd5e1;
+            border-radius: 50%;
+            transform: translateY(-50%);
+            cursor: crosshair;
+        }
+        
+        .node-port-in {
+            left: -6px;
+        }
+        
+        .node-port-out {
+            right: -6px;
+        }
+        
+        /* Properties Panel */
+        .properties-panel {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            padding: 80px 20px 20px;
+            overflow-y: auto;
+        }
+        
+        .properties-panel h3 {
+            font-size: 0.9rem;
+            color: #1e293b;
+            margin-bottom: 16px;
+        }
+        
+        .empty-properties {
+            text-align: center;
+            padding: 40px 20px;
+            color: #94a3b8;
+        }
+        
+        .empty-properties-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 6px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: #1e293b;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #0f766e;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        /* Toolbar */
+        .canvas-toolbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .toolbar-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="builder-container">
+        <!-- Header -->
+        <header class="builder-header">
+            <div class="header-left">
+                <a href="/" class="back-btn">←</a>
+                <input type="text" 
+                       class="workflow-name-input" 
+                       value="{% if workflow %}{{ workflow.name }}{% else %}Untitled Workflow{% endif %}"
+                       placeholder="Workflow Name">
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="testWorkflow()">▶ Test</button>
+                <button class="btn btn-primary" onclick="saveWorkflow()">💾 Save</button>
+            </div>
+        </header>
+        
+        <!-- Sidebar - Node Palette -->
+        <aside class="sidebar">
+            <h3>Node Types</h3>
+            <div class="node-palette">
+                {% for node_type, template in node_templates.items() %}
+                <div class="palette-item" draggable="true" data-node-type="{{ node_type }}">
+                    <div class="palette-icon" style="background: {{ template.color }}20; color: {{ template.color }}">
+                        {{ template.icon }}
+                    </div>
+                    <div class="palette-info">
+                        <div class="palette-name">{{ template.name }}</div>
+                        <div class="palette-desc">{{ template.description }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </aside>
+        
+        <!-- Canvas -->
+        <div class="canvas-container">
+            <div class="workflow-canvas" id="canvas">
+                {% if workflow %}
+                    {% for node in workflow.nodes %}
+                    <div class="workflow-node" 
+                         id="{{ node.id }}"
+                         style="left: {{ node.position.x }}px; top: {{ node.position.y }}px;"
+                         data-node-type="{{ node.type }}">
+                        <div class="node-header" style="border-left: 3px solid {{ node_templates[node.type].color }}">
+                            <div class="node-icon" style="background: {{ node_templates[node.type].color }}20; color: {{ node_templates[node.type].color }}">
+                                {{ node_templates[node.type].icon }}
+                            </div>
+                            <div class="node-title">{{ node.label }}</div>
+                        </div>
+                        <div class="node-body">
+                            <div class="node-config-summary">
+                                {% if node.config.task_type %}
+                                    {{ node.config.task_type|replace('_', ' ')|title }}
+                                {% elif node.config.trigger_type %}
+                                    {{ node.config.trigger_type|replace('_', ' ')|title }}
+                                {% else %}
+                                    Click to configure
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="node-ports node-port-in"></div>
+                        <div class="node-ports node-port-out"></div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <!-- Canvas Toolbar -->
+            <div class="canvas-toolbar">
+                <button class="toolbar-btn" title="Zoom In">🔍+</button>
+                <button class="toolbar-btn" title="Zoom Out">🔍-</button>
+                <button class="toolbar-btn" title="Fit to Screen">⬛</button>
+                <button class="toolbar-btn" title="Delete" onclick="deleteSelected()">🗑️</button>
+            </div>
+        </div>
+        
+        <!-- Properties Panel -->
+        <aside class="properties-panel">
+            <h3>⚙️ Node Properties</h3>
+            <div class="empty-properties" id="empty-properties">
+                <div class="empty-properties-icon">👆</div>
+                <p>Select a node to configure its properties</p>
+            </div>
+            <div id="properties-form" style="display: none;">
+                <!-- Dynamic form will be inserted here -->
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        // Simple drag and drop implementation
+        let selectedNode = null;
+        let draggedNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        
+        const canvas = document.getElementById('canvas');
+        
+        // Make nodes draggable
+        document.querySelectorAll('.workflow-node').forEach(node => {
+            node.addEventListener('mousedown', startDrag);
+            node.addEventListener('click', () => selectNode(node));
+        });
+        
+        function startDrag(e) {
+            if (e.target.classList.contains('node-ports')) return;
+            
+            draggedNode = e.currentTarget;
+            const rect = draggedNode.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+        
+        function drag(e) {
+            if (!draggedNode) return;
+            
+            const canvasRect = canvas.getBoundingClientRect();
+            const x = e.clientX - canvasRect.left - dragOffset.x;
+            const y = e.clientY - canvasRect.top - dragOffset.y;
+            
+            draggedNode.style.left = x + 'px';
+            draggedNode.style.top = y + 'px';
+        }
+        
+        function stopDrag() {
+            draggedNode = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+        
+        function selectNode(node) {
+            document.querySelectorAll('.workflow-node').forEach(n => n.classList.remove('selected'));
+            node.classList.add('selected');
+            selectedNode = node;
+            
+            // Show properties form
+            document.getElementById('empty-properties').style.display = 'none';
+            document.getElementById('properties-form').style.display = 'block';
+            
+            // Load node configuration
+            loadNodeProperties(node);
+        }
+        
+        function loadNodeProperties(node) {
+            const nodeType = node.dataset.nodeType;
+            const formContainer = document.getElementById('properties-form');
+            
+            // In real implementation, this would fetch from server
+            formContainer.innerHTML = `
+                <div class="form-group">
+                    <label>Node Label</label>
+                    <input type="text" value="${node.querySelector('.node-title').textContent}">
+                </div>
+                <div class="form-group">
+                    <label>Node Type</label>
+                    <input type="text" value="${nodeType}" disabled>
+                </div>
+                <p style="color: #64748b; font-size: 0.85rem; margin-top: 20px;">
+                    Configuration options would appear here based on node type.
+                </p>
+            `;
+        }
+        
+        function deleteSelected() {
+            if (selectedNode) {
+                selectedNode.remove();
+                selectedNode = null;
+                document.getElementById('empty-properties').style.display = 'block';
+                document.getElementById('properties-form').style.display = 'none';
+            }
+        }
+        
+        function saveWorkflow() {
+            // In real implementation, this would save to server via HTMX
+            alert('Workflow saved! (Demo)');
+        }
+        
+        function testWorkflow() {
+            alert('Testing workflow... (Demo)');
+        }
+        
+        // Palette drag and drop
+        document.querySelectorAll('.palette-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('node-type', item.dataset.nodeType);
+            });
+        });
+        
+        canvas.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        canvas.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const nodeType = e.dataTransfer.getData('node-type');
+            if (nodeType) {
+                // In real implementation, this would create a new node
+                console.log('Create node of type:', nodeType, 'at', e.clientX, e.clientY);
+            }
+        });
+    </script>
+</body>
+</html>

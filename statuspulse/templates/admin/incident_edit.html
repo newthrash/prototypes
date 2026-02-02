@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Incident #{{ incident.id }} - StatusPulse Admin</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Update Incident</h1>
+            <nav class="admin-nav">
+                <a href="/admin">← Back to Dashboard</a>
+            </nav>
+        </div>
+
+        <div class="incident-card" style="margin-bottom: 2rem;">
+            <div class="incident-header">
+                <div>
+                    <div class="incident-title">{{ incident.title }}</div>
+                    <div class="incident-meta">
+                        Created {{ incident.created_at.strftime('%b %d, %Y at %H:%M UTC') }}
+                    </div>
+                </div>
+                <span class="incident-impact {{ incident.impact }}">{{ incident.impact }}</span>
+            </div>
+            <p class="incident-description">{{ incident.description }}</p>
+            
+            {% if affected_ids %}
+            <div style="margin-top: 1rem;">
+                <strong>Affected:</strong>
+                {% for ic in incident.affected_components %}
+                    <span class="status-badge {{ ic.component.status }}" style="margin-left: 0.5rem;">
+                        {{ ic.component.name }}
+                    </span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="component-group" style="margin-bottom: 2rem;">
+            <div class="group-header">Timeline</div>
+            
+            {% if incident.updates %}
+                {% for update in incident.updates %}
+                <div class="component-item" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; width: 100%;">
+                        <span class="status-badge {{ update.status }}">
+                            {{ update.status.replace('_', ' ').title() }}
+                        </span>
+                        <span style="color: var(--color-text-muted); font-size: 0.875rem;">
+                            {{ update.created_at.strftime('%b %d, %H:%M UTC') }}
+                        </span>
+                    </div>
+                    <p>{{ update.message }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="component-item">
+                    <p style="color: var(--color-text-muted);">No updates yet.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <h3 style="margin-bottom: 1rem;">Add Update</h3>
+        <form action="/admin/incidents/{{ incident.id }}/update" method="post" style="max-width: 600px;">
+            <div class="form-group">
+                <label>New Status</label>
+                <select name="status" class="form-control" required>
+                    <option value="investigating" {% if incident.status == 'investigating' %}selected{% endif %}>🔍 Investigating</option>
+                    <option value="identified" {% if incident.status == 'identified' %}selected{% endif %}>🎯 Identified</option>
+                    <option value="monitoring" {% if incident.status == 'monitoring' %}selected{% endif %}>👀 Monitoring</option>
+                    <option value="resolved">✅ Resolved</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Update Message</label>
+                <textarea name="message" class="form-control" rows="3" required
+                          placeholder="What's happening now? What are users seeing?"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <a href="/admin" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Post Update</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

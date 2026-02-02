@@ -1,0 +1,59 @@
+{% set current_group = namespace(value='') %}
+
+{% for component in components %}
+    {% if component.group != current_group.value %}
+        {% if current_group.value != '' %}
+            </div>
+        {% endif %}
+        <div class="component-group">
+            <div class="group-header">{{ component.group }}</div>
+        {% set current_group.value = component.group %}
+    {% endif %}
+    
+    <div class="component-item">
+        <div class="component-info">
+            <h3>{{ component.name }}</h3>
+            <p>{{ component.description or 'No description' }}</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <form hx-post="/admin/components/{{ component.id }}/status" 
+                  hx-target="#components-list"
+                  hx-swap="innerHTML"
+                  style="display: flex; align-items: center; gap: 0.5rem;">
+                <select name="status" class="form-control" style="width: auto; min-width: 150px;"
+                        onchange="this.form.submit()">
+                    <option value="operational" {% if component.status == 'operational' %}selected{% endif %}>🟢 Operational</option>
+                    <option value="degraded" {% if component.status == 'degraded' %}selected{% endif %}>🟡 Degraded</option>
+                    <option value="partial_outage" {% if component.status == 'partial_outage' %}selected{% endif %}>🟠 Partial Outage</option>
+                    <option value="major_outage" {% if component.status == 'major_outage' %}selected{% endif %}>🔴 Major Outage</option>
+                    <option value="maintenance" {% if component.status == 'maintenance' %}selected{% endif %}>🔵 Maintenance</option>
+                </select>
+            </form>
+            <button class="btn btn-danger btn-sm"
+                    hx-delete="/admin/components/{{ component.id }}"
+                    hx-confirm="Delete this component?"
+                    hx-target="closest .component-group"
+                    hx-swap="outerHTML swap:300ms">
+                ×
+            </button>
+        </div>
+    </div>
+    
+    {% if loop.last %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state">
+        <p>No components yet. Add one to get started.</p>
+    </div>
+{% endfor %}
+
+<script>
+    // Remove modal after successful add
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        const modal = document.querySelector('.modal-overlay');
+        if (modal && evt.detail.target.id === 'components-list') {
+            modal.remove();
+        }
+    });
+</script>

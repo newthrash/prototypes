@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Detail - QueryFlow</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav { display: flex; gap: 8px; }
+        .nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav a:hover, .nav a.active { background: #334155; color: #e2e8f0; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .back-link {
+            color: #94a3b8;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover { color: #e2e8f0; }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+        
+        .severity-critical { background: #7f1d1d; color: #fca5a5; }
+        .severity-high { background: #7c2d12; color: #fdba74; }
+        .severity-medium { background: #713f12; color: #fde047; }
+        .severity-low { background: #1e3a5f; color: #93c5fd; }
+        .severity-info { background: #1f2937; color: #9ca3af; }
+        
+        .section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .section h2 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            color: #f8fafc;
+        }
+        
+        .sql-block {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+        
+        .keyword { color: #c084fc; }
+        .string { color: #4ade80; }
+        .number { color: #fbbf24; }
+        .comment { color: #64748b; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+        }
+        
+        .stat-value {
+            font-family: 'Monaco', monospace;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #38bdf8;
+        }
+        
+        .stat-value.slow { color: #f87171; }
+        .stat-value.medium { color: #fbbf24; }
+        .stat-value.fast { color: #4ade80; }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+        
+        .issue-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .issue-type {
+            font-weight: 600;
+            color: #fbbf24;
+        }
+        
+        .issue-severity {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .issue-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        
+        .suggestion {
+            background: #1e3a5f;
+            border-left: 3px solid #38bdf8;
+            padding: 12px;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .suggestion-label {
+            font-size: 0.8rem;
+            color: #38bdf8;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .suggestion-text {
+            color: #e2e8f0;
+            font-size: 0.9rem;
+        }
+        
+        .impact {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #334155;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>⚡ QueryFlow</h1>
+        <nav class="nav">
+            <a href="/">Dashboard</a>
+            <a href="/queries">Queries</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <a href="/queries" class="back-link">← Back to Queries</a>
+        
+        <span class="severity-badge severity-{{ query.severity.value }}">{{ query.severity.value }}</span>
+        
+        <!-- Query SQL -->
+        <div class="section">
+            <h2>📝 Query</h2>
+            <div class="sql-block">{{ query.query }}</div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="section">
+            <h2>📊 Performance Metrics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value {% if query.duration_ms > 100 %}slow{% elif query.duration_ms > 50 %}medium{% else %}fast{% endif %}">{{ "%.2f"|format(query.duration_ms) }}ms</div>
+                    <div class="stat-label">Duration</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ query.rows_returned or query.rows_affected }}</div>
+                    <div class="stat-label">Rows {{ 'Returned' if query.operation == 'SELECT' else 'Affected' }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ query.operation }}</div>
+                    <div class="stat-label">Operation</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ query.table or 'N/A' }}</div>
+                    <div class="stat-label">Table</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ query.timestamp.strftime('%H:%M:%S') }}</div>
+                    <div class="stat-label">Time</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value">{{ query.database }}</div>
+                    <div class="stat-label">Database</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Issues -->
+        {% if query.issues %}
+        <div class="section">
+            <h2>⚠️ Issues Detected ({{ query.issues|length }})</h2>
+            {% for issue in query.issues %}
+            <div class="issue-card">
+                <div class="issue-header">
+                    <span class="issue-type">{{ issue.type }}</span>
+                    <span class="issue-severity severity-{{ issue.severity.value }}">{{ issue.severity.value }}</span>
+                </div>
+                <p class="issue-description">{{ issue.description }}</p>
+                <div class="suggestion">
+                    <div class="suggestion-label">💡 SUGGESTION</div>
+                    <div class="suggestion-text">{{ issue.suggestion }}</div>
+                </div>
+                <p class="impact"><strong>Impact:</strong> {{ issue.impact }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="section">
+            <h2>✅ No Issues Detected</h2>
+            <p style="color: #4ade80;">This query passed all performance checks.</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queries - QueryFlow</title>
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav { display: flex; gap: 8px; }
+        .nav a {
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .nav a:hover, .nav a.active { background: #334155; color: #e2e8f0; }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .search-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #e2e8f0;
+            width: 400px;
+            font-size: 0.9rem;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-select {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+        
+        .query-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .query-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .query-item:hover {
+            border-color: #475569;
+            background: #252f47;
+        }
+        
+        .severity-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .severity-critical { background: #7f1d1d; color: #fca5a5; }
+        .severity-high { background: #7c2d12; color: #fdba74; }
+        .severity-medium { background: #713f12; color: #fde047; }
+        .severity-low { background: #1e3a5f; color: #93c5fd; }
+        .severity-info { background: #1f2937; color: #9ca3af; }
+        
+        .query-info { flex: 1; }
+        
+        .query-sql {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 700px;
+        }
+        
+        .query-meta {
+            display: flex;
+            gap: 12px;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        
+        .badge {
+            padding: 2px 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+        
+        .query-stats {
+            display: flex;
+            gap: 24px;
+            text-align: right;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .stat-value {
+            font-family: 'Monaco', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .stat-value.slow { color: #f87171; }
+        .stat-value.medium { color: #fbbf24; }
+        .stat-value.fast { color: #4ade80; }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+        
+        .page-btn {
+            padding: 8px 14px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .page-btn:hover, .page-btn.active {
+            background: #334155;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>⚡ QueryFlow</h1>
+        <nav class="nav">
+            <a href="/">Dashboard</a>
+            <a href="/queries" class="active">Queries</a>
+            <a href="/analytics">Analytics</a>
+        </nav>
+    </header>
+    
+    <div class="container">
+        <div class="toolbar">
+            <input type="text" class="search-box" placeholder="🔍 Search queries...">
+            <div class="filters">
+                <select class="filter-select">
+                    <option>All Severities</option>
+                    <option>Critical</option>
+                    <option>High</option>
+                    <option>Medium</option>
+                </select>
+                <select class="filter-select">
+                    <option>All Operations</option>
+                    <option>SELECT</option>
+                    <option>INSERT</option>
+                    <option>UPDATE</option>
+                    <option>DELETE</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="query-list">
+            {% for query in queries %}
+            <div class="query-item" onclick="window.location.href='/query/{{ query.id }}'">
+                <span class="severity-badge severity-{{ query.severity.value }}">{{ query.severity.value }}</span>
+                <div class="query-info">
+                    <div class="query-sql">{{ query.query }}</div>
+                    <div class="query-meta">
+                        <span class="badge">{{ query.operation }}</span>
+                        <span class="badge">{{ query.table or 'unknown' }}</span>
+                        <span>{{ query.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                        {% if query.issues %}
+                        <span style="color: #fbbf24;">⚠ {{ query.issues|length }} issues detected</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="query-stats">
+                    <div class="stat">
+                        <span class="stat-value {% if query.duration_ms > 100 %}slow{% elif query.duration_ms > 50 %}medium{% else %}fast{% endif %}">{{ "%.1f"|format(query.duration_ms) }}ms</span>
+                        <span class="stat-label">Duration</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ query.rows_returned or query.rows_affected }}</span>
+                        <span class="stat-label">Rows</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="pagination">
+            <button class="page-btn">← Prev</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn">3</button>
+            <button class="page-btn">Next →</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,290 @@
+{% if prompt %}
+<div class="results-container" style="margin-top: 30px;">
+    <!-- Risk Score Card -->
+    <div class="risk-card {{ risk_level }}">
+        <div class="risk-header">
+            <div class="risk-score-circle">
+                <span class="score">{{ risk_score }}</span>
+                <span class="label">Risk Score</span>
+            </div>
+            <div class="risk-info">
+                <h2>Risk Assessment</h2>
+                <p class="risk-level-badge {{ risk_level }}">{{ risk_level|upper }}</p>
+                <p class="summary">{{ summary }}</p>
+            </div>
+        </div>
+    </div>
+    
+    {% if detected %}
+    <!-- Threats List -->
+    <div class="threats-section">
+        <h3>🚨 Detected Threats ({{ detected|length }})</h3>
+        
+        {% for threat in detected %}
+        <div class="threat-card {{ threat.risk.value }}">
+            <div class="threat-header">
+                <span class="threat-type">{{ threat.type }}</span>
+                <span class="threat-risk {{ threat.risk.value }}">{{ threat.risk.value|upper }}</span>
+            </div>
+            <p class="threat-description">{{ threat.description }}</p>
+            <div class="mitigation">
+                <strong>💡 Mitigation:</strong> {{ threat.mitigation }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="safe-notice">
+        <div class="safe-icon">✅</div>
+        <h3>No Threats Detected</h3>
+        <p>This prompt appears safe to process.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Scanned Content -->
+    <div class="scanned-content">
+        <h3>📄 Scanned Content</h3>
+        {% if context %}
+        <div class="content-section">
+            <label>Context:</label>
+            <pre>{{ context }}</pre>
+        </div>
+        {% endif %}
+        <div class="content-section">
+            <label>Prompt:</label>
+            <pre>{{ prompt }}</pre>
+        </div>
+    </div>
+</div>
+
+<style>
+    .results-container {
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .risk-card {
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 25px;
+    }
+    
+    .risk-card.safe {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 255, 136, 0.05));
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+    
+    .risk-card.low {
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+    
+    .risk-card.medium {
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+        border: 1px solid rgba(255, 152, 0, 0.3);
+    }
+    
+    .risk-card.high {
+        background: linear-gradient(135deg, rgba(255, 87, 34, 0.1), rgba(255, 87, 34, 0.05));
+        border: 1px solid rgba(255, 87, 34, 0.3);
+    }
+    
+    .risk-card.critical {
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
+        border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+    
+    .risk-header {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+    }
+    
+    .risk-score-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.3);
+        border: 3px solid;
+    }
+    
+    .risk-card.safe .risk-score-circle { border-color: #00ff88; }
+    .risk-card.low .risk-score-circle { border-color: #ffc107; }
+    .risk-card.medium .risk-score-circle { border-color: #ff9800; }
+    .risk-card.high .risk-score-circle { border-color: #ff5722; }
+    .risk-card.critical .risk-score-circle { border-color: #f44336; }
+    
+    .risk-score-circle .score {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    .risk-card.safe .score { color: #00ff88; }
+    .risk-card.low .score { color: #ffc107; }
+    .risk-card.medium .score { color: #ff9800; }
+    .risk-card.high .score { color: #ff5722; }
+    .risk-card.critical .score { color: #f44336; }
+    
+    .risk-score-circle .label {
+        font-size: 0.7rem;
+        color: #8892b0;
+        text-transform: uppercase;
+    }
+    
+    .risk-info h2 {
+        margin: 0 0 10px 0;
+        font-size: 1.5rem;
+    }
+    
+    .risk-level-badge {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+    }
+    
+    .risk-level-badge.safe { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+    .risk-level-badge.low { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .risk-level-badge.medium { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+    .risk-level-badge.high { background: rgba(255, 87, 34, 0.2); color: #ff5722; }
+    .risk-level-badge.critical { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+    
+    .summary {
+        color: #ccd6f6;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+    
+    .threats-section h3 {
+        margin-bottom: 15px;
+        color: #fff;
+    }
+    
+    .threat-card {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid;
+    }
+    
+    .threat-card.low { border-left-color: #ffc107; }
+    .threat-card.medium { border-left-color: #ff9800; }
+    .threat-card.high { border-left-color: #ff5722; }
+    .threat-card.critical { border-left-color: #f44336; }
+    
+    .threat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .threat-type {
+        font-weight: 600;
+        color: #fff;
+    }
+    
+    .threat-risk {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    
+    .threat-risk.low { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .threat-risk.medium { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+    .threat-risk.high { background: rgba(255, 87, 34, 0.2); color: #ff5722; }
+    .threat-risk.critical { background: rgba(244, 67, 54, 0.2); color: #f44336; }
+    
+    .threat-description {
+        color: #8892b0;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+    
+    .mitigation {
+        background: rgba(0, 212, 255, 0.1);
+        border-radius: 6px;
+        padding: 10px;
+        font-size: 0.85rem;
+        color: #ccd6f6;
+    }
+    
+    .mitigation strong {
+        color: #00d4ff;
+    }
+    
+    .safe-notice {
+        text-align: center;
+        padding: 40px;
+        background: rgba(0, 255, 136, 0.05);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px;
+        margin-bottom: 25px;
+    }
+    
+    .safe-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+    
+    .safe-notice h3 {
+        color: #00ff88;
+        margin-bottom: 10px;
+    }
+    
+    .safe-notice p {
+        color: #8892b0;
+    }
+    
+    .scanned-content {
+        margin-top: 25px;
+    }
+    
+    .scanned-content h3 {
+        margin-bottom: 15px;
+        color: #fff;
+    }
+    
+    .content-section {
+        margin-bottom: 15px;
+    }
+    
+    .content-section label {
+        display: block;
+        color: #00d4ff;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+    }
+    
+    .content-section pre {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        overflow-x: auto;
+        color: #ccd6f6;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+</style>
+{% endif %}

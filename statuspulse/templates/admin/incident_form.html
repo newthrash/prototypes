@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Incident - StatusPulse Admin</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-header">
+            <h1>Create New Incident</h1>
+            <nav class="admin-nav">
+                <a href="/admin">← Back to Dashboard</a>
+            </nav>
+        </div>
+
+        <div style="max-width: 600px;">
+            <form action="/admin/incidents" method="post">
+                <div class="form-group">
+                    <label>Incident Title</label>
+                    <input type="text" name="title" class="form-control" required 
+                           placeholder="e.g., API Response Time Degradation">
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description" class="form-control" rows="3"
+                              placeholder="Brief description of the issue..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Impact Level</label>
+                    <select name="impact" class="form-control" required>
+                        <option value="minor">Minor - Minor functionality affected</option>
+                        <option value="major">Major - Significant functionality affected</option>
+                        <option value="critical">Critical - Core functionality down</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Affected Components</label>
+                    <div class="checkbox-grid">
+                        {% for component in components %}
+                        <label class="checkbox-item">
+                            <input type="checkbox" name="component_ids" value="{{ component.id }}">
+                            <span>{{ component.name }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <a href="/admin" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Create Incident</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

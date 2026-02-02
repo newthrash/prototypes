@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StatusPulse - System Status</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>StatusPulse</h1>
+            <p>Real-time system status updates</p>
+        </header>
+
+        <!-- System Status Banner -->
+        <div class="status-banner {{ system_status }}">
+            {{ status_message }}
+        </div>
+
+        <!-- Components Section -->
+        <section class="section">
+            <div class="section-header">
+                <h2>Services</h2>
+            </div>
+            
+            {% set current_group = namespace(value='') %}
+            {% for component in components %}
+                {% if component.group != current_group.value %}
+                    {% if current_group.value != '' %}
+                        </div>
+                    {% endif %}
+                    <div class="component-group">
+                        <div class="group-header">{{ component.group }}</div>
+                    {% set current_group.value = component.group %}
+                {% endif %}
+                
+                <div class="component-item">
+                    <div class="component-info">
+                        <h3>{{ component.name }}</h3>
+                        <p>{{ component.description }}</p>
+                    </div>
+                    <span class="status-badge {{ component.status }}">
+                        {{ component.status.replace('_', ' ').title() }}
+                    </span>
+                </div>
+                
+                {% if loop.last %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </section>
+
+        <!-- Active Incidents -->
+        {% if active_incidents %}
+        <section class="section">
+            <div class="section-header">
+                <h2>Active Incidents</h2>
+            </div>
+            
+            {% for incident in active_incidents %}
+            <div class="incident-card">
+                <div class="incident-header">
+                    <div>
+                        <div class="incident-title">{{ incident.title }}</div>
+                        <div class="incident-meta">
+                            Started {{ incident.created_at.strftime('%b %d, %Y at %H:%M UTC') }}
+                        </div>
+                    </div>
+                    <span class="incident-impact {{ incident.impact }}">{{ incident.impact }}</span>
+                </div>
+                <p class="incident-description">{{ incident.description }}</p>
+                
+                {% if incident.updates %}
+                <div class="timeline">
+                    {% for update in incident.updates %}
+                    <div class="timeline-item {% if update.status == 'resolved' %}resolved{% endif %}">
+                        <div class="timeline-time">{{ update.created_at.strftime('%H:%M UTC') }}</div>
+                        <div class="timeline-content">
+                            <div class="timeline-status">{{ update.status.replace('_', ' ').title() }}</div>
+                            <p>{{ update.message }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div style="margin-top: 1rem;">
+                    <a href="/incident/{{ incident.id }}" class="btn btn-secondary btn-sm">View Full Details</a>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        <!-- Recent Incidents -->
+        {% if recent_incidents %}
+        <section class="section">
+            <div class="section-header">
+                <h2>Recently Resolved</h2>
+                <a href="/history" class="btn btn-secondary btn-sm">View All History</a>
+            </div>
+            
+            {% for incident in recent_incidents %}
+            <div class="incident-card" style="opacity: 0.8;">
+                <div class="incident-header">
+                    <div>
+                        <div class="incident-title">{{ incident.title }}</div>
+                        <div class="incident-meta">
+                            Resolved {{ incident.resolved_at.strftime('%b %d, %Y') if incident.resolved_at else '' }}
+                        </div>
+                    </div>
+                    <span class="status-badge operational">Resolved</span>
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+        {% endif %}
+
+        <footer>
+            <p>Powered by <a href="/admin">StatusPulse</a> • Last updated: {{ now.strftime('%H:%M UTC') }}</p>
+        </footer>
+    </div>
+</body>
+</html>

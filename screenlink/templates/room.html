@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room {{ room_code }} - ScreenLink</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body class="room-page">
+    <div class="room-container">
+        <!-- Header -->
+        <header class="room-header">
+            <a href="/" class="logo-small">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span>ScreenLink</span>
+            </a>
+            <div class="room-info">
+                <span class="room-label">Room Code:</span>
+                <span class="room-code-badge">{{ room_code }}</span>
+                <span id="connectionStatus" class="status connecting">Connecting...</span>
+            </div>
+            <button id="leaveBtn" class="btn btn-danger btn-sm">Leave</button>
+        </header>
+
+        <!-- Main Content -->
+        <div class="room-layout">
+            <!-- Video Area -->
+            <div class="video-area">
+                <div id="hostView" class="video-container">
+                    <video id="remoteVideo" autoplay playsinline></video>
+                    <div id="waitingMessage" class="waiting-overlay">
+                        <div class="waiting-content">
+                            <div class="spinner"></div>
+                            <p>Waiting for host to share their screen...</p>
+                        </div>
+                    </div>
+                    <div id="hostControls" class="host-controls hidden">
+                        <button id="shareBtn" class="btn btn-primary btn-lg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                                <line x1="8" y1="21" x2="16" y2="21"></line>
+                                <line x1="12" y1="17" x2="12" y2="21"></line>
+                            </svg>
+                            Share Screen
+                        </button>
+                        <button id="stopShareBtn" class="btn btn-danger btn-lg hidden">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                            </svg>
+                            Stop Sharing
+                        </button>
+                    </div>
+                    <div id="localVideoContainer" class="local-video hidden">
+                        <video id="localVideo" autoplay playsinline muted></video>
+                        <span class="local-label">Your screen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Sidebar -->
+            <div class="chat-sidebar">
+                <div class="chat-header">
+                    <h3>Chat</h3>
+                    <span id="participantCount" class="participant-count">1 participant</span>
+                </div>
+                <div id="chatMessages" class="chat-messages"></div>
+                <form id="chatForm" class="chat-form">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        class="chat-input" 
+                        placeholder="Type a message..." 
+                        autocomplete="off"
+                        maxlength="500"
+                    >
+                    <button type="submit" class="btn btn-primary btn-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Connection Error</h3>
+            <p id="errorMessage">Something went wrong.</p>
+            <a href="/" class="btn btn-primary">Return Home</a>
+        </div>
+    </div>
+
+    <script src="/static/js/webrtc.js"></script>
+    <script>
+        // Initialize room
+        const ROOM_CODE = "{{ room_code }}";
+        const socket = io();
+        let isHost = false;
+        let peerId = null;
+
+        // DOM Elements
+        const connectionStatus = document.getElementById('connectionStatus');
+        const leaveBtn = document.getElementById('leaveBtn');
+        const waitingMessage = document.getElementById('waitingMessage');
+        const hostControls = document.getElementById('hostControls');
+        const participantCount = document.getElementById('participantCount');
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Initialize WebRTC
+        const webrtc = new WebRTCManager(socket, ROOM_CODE);
+
+        // Socket events
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            connectionStatus.textContent = 'Joining room...';
+            
+            // Try to join as peer first
+            socket.emit('join_room', { room_code: ROOM_CODE });
+        });
+
+        socket.on('room-joined', (data) => {
+            console.log('Joined room as peer:', data);
+            connectionStatus.textContent = 'Connected';
+            connectionStatus.classList.remove('connecting');
+            connectionStatus.classList.add('connected');
+            isHost = false;
+            updateParticipantCount(2);
+        });
+
+        socket.on('peer-joined', (data) => {
+            console.log('Peer joined:', data);
+            isHost = true;
+            peerId = data.peer_id;
+            hostControls.classList.remove('hidden');
+            waitingMessage.classList.add('hidden');
+            connectionStatus.textContent = 'Connected (Host)';
+            connectionStatus.classList.remove('connecting');
+            connectionStatus.classList.add('connected');
+            updateParticipantCount(2);
+            
+            // Initiate WebRTC connection as host
+            webrtc.startHost(data.peer_id);
+        });
+
+        socket.on('host-disconnected', () => {
+            showError('Host has disconnected. The session has ended.');
+        });
+
+        socket.on('peer-disconnected', (data) => {
+            console.log('Peer disconnected:', data);
+            updateParticipantCount(1);
+            if (isHost) {
+                webrtc.handlePeerDisconnect();
+            }
+        });
+
+        socket.on('error', (data) => {
+            if (data.message === 'You are the host') {
+                // This means we're the first to connect - we're the host
+                isHost = true;
+                hostControls.classList.remove('hidden');
+                waitingMessage.classList.add('hidden');
+                connectionStatus.textContent = 'Connected (Host)';
+                connectionStatus.classList.remove('connecting');
+                connectionStatus.classList.add('connected');
+            } else {
+                showError(data.message);
+            }
+        });
+
+        // Leave room
+        leaveBtn.addEventListener('click', () => {
+            socket.emit('leave_room', { room_code: ROOM_CODE });
+            window.location.href = '/';
+        });
+
+        // Update participant count
+        function updateParticipantCount(count) {
+            participantCount.textContent = count === 1 ? '1 participant' : `${count} participants`;
+        }
+
+        // Show error modal
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorModal.classList.remove('hidden');
+        }
+
+        // Chat functionality
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (message) {
+                socket.emit('chat_message', {
+                    room_code: ROOM_CODE,
+                    message: message,
+                    sender: isHost ? 'Host' : 'Guest'
+                });
+                addMessage('You', message, true);
+                chatInput.value = '';
+            }
+        });
+
+        socket.on('chat-message', (data) => {
+            addMessage(data.sender, data.message, false);
+        });
+
+        function addMessage(sender, message, isSelf) {
+            const div = document.createElement('div');
+            div.className = `message ${isSelf ? 'self' : 'other'}`;
+            div.innerHTML = `
+                <span class="sender">${sender}</span>
+                <span class="text">${escapeHtml(message)}</span>
+                <span class="time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            `;
+            chatMessages.appendChild(div);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
