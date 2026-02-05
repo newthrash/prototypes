@@ -75,10 +75,17 @@ const QueryPanel = () => {
   // Load default query when tab changes
   useEffect(() => {
     if (activeTab && queryPanelOpen) {
-      const defaultQuery = queryLanguage === 'sql' 
-        ? getDefaultSQLQuery(activeTab.path)
-        : getDefaultPythonCode(activeTab.path);
-      setQuery(defaultQuery);
+      // Check for pending query from AI panel
+      const pendingQuery = (window as any).__pendingQuery;
+      if (pendingQuery) {
+        setQuery(pendingQuery);
+        (window as any).__pendingQuery = null;
+      } else {
+        const defaultQuery = queryLanguage === 'sql' 
+          ? getDefaultSQLQuery(activeTab.path)
+          : getDefaultPythonCode(activeTab.path);
+        setQuery(defaultQuery);
+      }
       setResults(null);
     }
   }, [activeTabId, queryLanguage, queryPanelOpen]);

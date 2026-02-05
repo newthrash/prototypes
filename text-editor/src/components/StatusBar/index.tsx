@@ -7,9 +7,11 @@ import {
   Zap,
   Bell,
   Database,
+  Bot,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
+import { useAIAgentsStore } from '../../stores/aiAgentsStore';
 import { countWords, countLines, formatJson } from '../../utils/helpers';
 
 const StatusBar = () => {
@@ -27,6 +29,8 @@ const StatusBar = () => {
     queryPanelOpen,
     toggleQueryPanel,
   } = useEditorStore();
+  
+  const { isPanelOpen: isAIAgentsOpen, togglePanel: toggleAIAgents } = useAIAgentsStore();
   
   const { currentFolder } = useFileSystemStore();
   const [cursorPosition, setCursorPosition] = useState({ line: 1, column: 1 });
@@ -179,6 +183,18 @@ const StatusBar = () => {
         >
           <Database size={12} />
           Query
+        </button>
+
+        {/* AI Agents Toggle */}
+        <button
+          onClick={toggleAIAgents}
+          className={`px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+            isAIAgentsOpen ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-20'
+          }`}
+          title="Toggle AI Agents (⌘⇧A)"
+        >
+          <Bot size={12} />
+          AI
         </button>
 
         {/* Zen Mode */}

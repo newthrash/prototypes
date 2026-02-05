@@ -8,8 +8,10 @@ import {
   FileType,
   Keyboard,
   Info,
+  Bot,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
+import { useAIAgentsStore } from '../../stores/aiAgentsStore';
 
 interface SettingsProps {
   onClose: () => void;
@@ -245,6 +247,8 @@ const KeyboardSettings = () => {
     { key: 'Save As', binding: '⌘⇧S / Ctrl+Shift+S' },
     { key: 'Close Tab', binding: '⌘W / Ctrl+W' },
     { key: 'Toggle Sidebar', binding: '⌘B / Ctrl+B' },
+    { key: 'AI Agents Panel', binding: '⌘⇧A / Ctrl+Shift+A' },
+    { key: 'Query Panel', binding: '⌘⇧Q / Ctrl+Shift+Q' },
     { key: 'Command Palette', binding: '⌘⇧P / Ctrl+Shift+P' },
     { key: 'Find', binding: '⌘F / Ctrl+F' },
     { key: 'Find and Replace', binding: '⌘H / Ctrl+H' },
@@ -275,6 +279,8 @@ const KeyboardSettings = () => {
 };
 
 const AboutSettings = () => {
+  const { setPanelOpen, setShowSettings } = useAIAgentsStore();
+  
   return (
     <div className="space-y-6">
       <div className="text-center py-8">
@@ -285,6 +291,28 @@ const AboutSettings = () => {
           Designed for speed, extensibility, and developer productivity.
         </p>
       </div>
+
+      <SettingGroup title="AI Integration">
+        <div className="flex items-center justify-between py-2 px-3 bg-primary rounded-lg">
+          <div className="flex items-center gap-3">
+            <Bot size={20} className="text-accent" />
+            <div>
+              <div className="text-text-primary font-medium">AI Agents</div>
+              <div className="text-xs text-text-secondary">Chat with AI about your files</div>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              useEditorStore.getState().toggleSettings();
+              setPanelOpen(true);
+              setShowSettings(true);
+            }}
+            className="px-3 py-1.5 bg-accent hover:bg-accent/90 text-white text-sm rounded transition-colors"
+          >
+            Configure
+          </button>
+        </div>
+      </SettingGroup>
 
       <SettingGroup title="Links">
         <div className="space-y-2">

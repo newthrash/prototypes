@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useEditorStore } from './stores/editorStore';
 import { useFileSystemStore } from './stores/fileSystemStore';
+import { useAIAgentsStore } from './stores/aiAgentsStore';
 import { useKeyBinding } from './hooks/useEditor';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/Tabs';
@@ -9,6 +10,7 @@ import StatusBar from './components/StatusBar';
 import CommandPalette from './components/CommandPalette';
 import Settings from './components/Settings';
 import QueryPanel from './components/QueryPanel';
+import AIAgentsPanel from './components/AIAgentsPanel';
 
 function App() {
   const {
@@ -23,6 +25,8 @@ function App() {
     addTab,
     tabs,
   } = useEditorStore();
+
+  const { togglePanel: toggleAIPanel } = useAIAgentsStore();
 
   const { openFile, openFolder, getFileLanguage } = useFileSystemStore();
 
@@ -45,6 +49,7 @@ function App() {
   useKeyBinding('mod+shift+p', openCommandPalette);
   useKeyBinding('mod+,', toggleSettings);
   useKeyBinding('mod+shift+q', toggleQueryPanel);
+  useKeyBinding('mod+shift+a', toggleAIPanel);
 
   // Apply theme
   useEffect(() => {
@@ -84,6 +89,9 @@ function App() {
         {!isZenMode && <StatusBar />}
       </div>
 
+      {/* AI Agents Panel */}
+      <AIAgentsPanel />
+
       {/* Modals */}
       <CommandPalette />
       {isSettingsOpen && <Settings onClose={toggleSettings} />}
@@ -119,7 +127,7 @@ function WelcomeScreen({
     <div className="flex flex-col items-center justify-center h-full bg-primary">
       <div className="text-center">
         <h1 className="text-5xl font-light mb-4 text-accent">OpenText</h1>
-        <p className="text-text-secondary mb-8 text-lg">A modern, fast text editor</p>
+        <p className="text-text-secondary mb-8 text-lg">A modern, fast text editor with AI</p>
 
         <div className="flex gap-4 mb-12">
           <button
@@ -174,6 +182,7 @@ function WelcomeScreen({
           <div className="flex gap-6 justify-center flex-wrap">
             <span>⌘P Command Palette</span>
             <span>⌘B Toggle Sidebar</span>
+            <span>⌘⇧A AI Agents</span>
             <span>⌘, Settings</span>
             <span>⌘⇧Q Query Panel</span>
           </div>

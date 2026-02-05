@@ -51,7 +51,17 @@ A modern, fast, cross-platform text editor built with **Tauri** and **React**.
 - ✅ **Customizable** - Settings for fonts, themes, behavior
 - ✅ **Keyboard Shortcuts** - Extensive shortcut support
 
-### Query Panel (NEW!)
+### AI Agents Panel (NEW!)
+- ✅ **Multiple AI Providers** - OpenAI, Anthropic, Ollama, and custom endpoints
+- ✅ **Pre-configured Agents** - Data Analyst, Code Reviewer, Log Analyzer, Regex Expert, JSON Wrangler, SQL Assistant
+- ✅ **Custom Agents** - Create your own specialized AI agents
+- ✅ **Context-Aware** - AI knows about your current file
+- ✅ **Actionable Responses** - Run queries, insert code directly from AI responses
+- ✅ **Chat History** - Persistent conversation history
+- ✅ **Streaming Responses** - Real-time AI responses
+- ✅ **Local Models** - Use Ollama for offline, private AI
+
+### Query Panel
 - ✅ **SQL Queries** - Run SQL queries on CSV, JSON, Parquet files using DuckDB
 - ✅ **Python Scripts** - Execute Python code on file content via Pyodide
 - ✅ **Query History** - Automatically saves recent queries
@@ -138,6 +148,8 @@ The built app will be in `src-tauri/target/release/bundle/deb/` or `appimage/`
 | Toggle Sidebar | ⌘B | Ctrl+B |
 | Settings | ⌘, | Ctrl+, |
 | Zen Mode | ⌘K Z | Ctrl+K Z |
+| **Toggle AI Agents** | **⌘⇧A** | **Ctrl+Shift+A** |
+| **Send AI Message** | **⌘↵** | **Ctrl+Enter** |
 | **Toggle Query Panel** | **⌘⇧Q** | **Ctrl+Shift+Q** |
 | **Run Query** | **⌘↵** | **Ctrl+Enter** |
 | **Run & Pin Results** | **⌘⇧↵** | **Ctrl+Shift+Enter** |
@@ -167,6 +179,7 @@ The built app will be in `src-tauri/target/release/bundle/deb/` or `appimage/`
 
 ## Roadmap
 
+- [x] **AI Agents Panel** - Chat with AI about your files
 - [ ] Plugin/Extension system
 - [ ] Git integration (diff, blame, staging)
 - [ ] Terminal integration

@@ -12,9 +12,12 @@ import {
   Maximize,
   Database,
   Code2,
+  Bot,
+  Sparkles,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
+import { useAIAgentsStore } from '../../stores/aiAgentsStore';
 
 interface CommandItem {
   id: string;
@@ -41,8 +44,15 @@ const CommandPalette = () => {
     queryPanelOpen,
     addTab,
   } = useEditorStore();
-  
+
   const { openFile, openFolder, getFileLanguage } = useFileSystemStore();
+  const { 
+    togglePanel: toggleAIAgents, 
+    isPanelOpen: isAIAgentsOpen,
+    createSession,
+    setActiveAgent,
+    agents,
+  } = useAIAgentsStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -209,10 +219,35 @@ const CommandPalette = () => {
           closeCommandPalette();
         },
       })),
+      
+      // AI Agents
+      {
+        id: 'toggle-ai-agents',
+        label: isAIAgentsOpen ? 'Close AI Agents Panel' : 'Open AI Agents Panel',
+        icon: <Bot size={18} />,
+        shortcut: '⌘⇧A',
+        category: 'AI Agents',
+        action: () => {
+          toggleAIAgents();
+          closeCommandPalette();
+        },
+      },
+      ...agents.map(agent => ({
+        id: `agent-${agent.id}`,
+        label: `Chat with ${agent.name}`,
+        icon: <Sparkles size={18} />,
+        category: 'AI Agents',
+        action: () => {
+          setActiveAgent(agent.id);
+          if (!isAIAgentsOpen) toggleAIAgents();
+          createSession(agent.id);
+          closeCommandPalette();
+        },
+      })),
     ];
 
     return list;
-  }, [tabs, activeTabId, theme, queryPanelOpen, closeCommandPalette, openFile, openFolder, addTab, getFileLanguage, setActiveTab, setTheme, toggleZenMode, toggleSettings, toggleQueryPanel, setQueryLanguage]);
+  }, [tabs, activeTabId, theme, queryPanelOpen, isAIAgentsOpen, agents, closeCommandPalette, openFile, openFolder, addTab, getFileLanguage, setActiveTab, setTheme, toggleZenMode, toggleSettings, toggleQueryPanel, setQueryLanguage, toggleAIAgents, setActiveAgent, createSession]);
 
   const filteredCommands = useMemo(() => {
     if (!searchQuery) return commands;
