@@ -292,15 +292,8 @@ const AIAgentsPanel = () => {
   };
 
   if (!isPanelOpen) {
-    return (
-      <button
-        onClick={togglePanel}
-        className="fixed right-4 top-4 z-40 p-2 bg-secondary hover:bg-tertiary rounded-lg shadow-lg border border-border-color transition-colors"
-        title="Open AI Agents Panel (Ctrl+Shift+A)"
-      >
-        <Bot size={20} className="text-accent" />
-      </button>
-    );
+    // Panel is closed - button is now in StatusBar, no floating button needed
+    return null;
   }
 
   return (
