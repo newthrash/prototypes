@@ -51,6 +51,27 @@ A modern, fast, cross-platform text editor built with **Tauri** and **React**.
 - ✅ **Customizable** - Settings for fonts, themes, behavior
 - ✅ **Keyboard Shortcuts** - Extensive shortcut support
 
+### Query Panel (NEW!)
+- ✅ **SQL Queries** - Run SQL queries on CSV, JSON, Parquet files using DuckDB
+- ✅ **Python Scripts** - Execute Python code on file content via Pyodide
+- ✅ **Query History** - Automatically saves recent queries
+- ✅ **Bookmarked Queries** - Save frequently used queries
+- ✅ **Results Viewer** - Table view with sorting, filtering, and pagination
+- ✅ **Export Results** - Export query results to CSV or JSON
+- ✅ **Matplotlib Support** - Display plots inline (Python)
+
+#### Supported File Types for Querying
+
+| File Type | SQL Support | Python Support |
+|-----------|-------------|----------------|
+| CSV/TSV | ✅ Native | ✅ Via pandas |
+| JSON | ✅ Native | ✅ Native |
+| JSONL | ✅ Native | ✅ Line by line |
+| Parquet | ✅ Native | ✅ Via pandas |
+| TXT/LOG | ❌ | ✅ Regex/text |
+| XML | ❌ | ✅ Via xml lib |
+| YAML | ❌ | ✅ Via pyyaml |
+
 ## Tech Stack
 
 - **Tauri** - Rust-based native desktop framework
@@ -117,6 +138,9 @@ The built app will be in `src-tauri/target/release/bundle/deb/` or `appimage/`
 | Toggle Sidebar | ⌘B | Ctrl+B |
 | Settings | ⌘, | Ctrl+, |
 | Zen Mode | ⌘K Z | Ctrl+K Z |
+| **Toggle Query Panel** | **⌘⇧Q** | **Ctrl+Shift+Q** |
+| **Run Query** | **⌘↵** | **Ctrl+Enter** |
+| **Run & Pin Results** | **⌘⇧↵** | **Ctrl+Shift+Enter** |
 
 ## Supported Languages
 

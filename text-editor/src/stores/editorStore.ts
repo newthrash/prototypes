@@ -57,6 +57,12 @@ export interface EditorState {
     activeFile: string | null;
     openFolder: string | null;
   } | null;
+  
+  // Query Panel
+  queryPanelOpen: boolean;
+  queryLanguage: 'sql' | 'python';
+  queryPanelHeight: number;
+  isQueryRunning: boolean;
 }
 
 export interface SearchResult {
@@ -117,6 +123,13 @@ interface EditorActions {
   // Session
   saveSession: () => void;
   restoreSession: () => void;
+  
+  // Query Panel actions
+  toggleQueryPanel: () => void;
+  setQueryPanelOpen: (open: boolean) => void;
+  setQueryLanguage: (lang: 'sql' | 'python') => void;
+  setQueryPanelHeight: (height: number) => void;
+  setIsQueryRunning: (running: boolean) => void;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -151,6 +164,12 @@ export const useEditorStore = create<EditorState & EditorActions>()(
       recentFiles: [],
       recentFolders: [],
       lastSession: null,
+      
+      // Query Panel initial state
+      queryPanelOpen: false,
+      queryLanguage: 'sql',
+      queryPanelHeight: 300,
+      isQueryRunning: false,
 
       // Tab actions
       addTab: (tab) => {
@@ -310,6 +329,13 @@ export const useEditorStore = create<EditorState & EditorActions>()(
       restoreSession: () => {
         // This will be implemented with file system operations
       },
+      
+      // Query Panel actions
+      toggleQueryPanel: () => set(state => ({ queryPanelOpen: !state.queryPanelOpen })),
+      setQueryPanelOpen: (open) => set({ queryPanelOpen: open }),
+      setQueryLanguage: (lang) => set({ queryLanguage: lang }),
+      setQueryPanelHeight: (height) => set({ queryPanelHeight: height }),
+      setIsQueryRunning: (running) => set({ isQueryRunning: running }),
     }),
     {
       name: 'opentext-storage',

@@ -10,6 +10,8 @@ import {
   Save,
   FilePlus,
   Maximize,
+  Database,
+  Code2,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
@@ -24,16 +26,19 @@ interface CommandItem {
 }
 
 const CommandPalette = () => {
-  const { 
-    isCommandPaletteOpen, 
-    closeCommandPalette, 
-    tabs, 
-    activeTabId, 
+  const {
+    isCommandPaletteOpen,
+    closeCommandPalette,
+    tabs,
+    activeTabId,
     setActiveTab,
     setTheme,
     theme,
     toggleZenMode,
     toggleSettings,
+    toggleQueryPanel,
+    setQueryLanguage,
+    queryPanelOpen,
     addTab,
   } = useEditorStore();
   
@@ -133,6 +138,41 @@ const CommandPalette = () => {
           closeCommandPalette();
         },
       },
+
+      // Query Panel Commands
+      {
+        id: 'toggle-query-panel',
+        label: queryPanelOpen ? 'Close Query Panel' : 'Open Query Panel',
+        icon: <Database size={18} />,
+        shortcut: '⌘⇧Q',
+        category: 'Query',
+        action: () => {
+          toggleQueryPanel();
+          closeCommandPalette();
+        },
+      },
+      {
+        id: 'query-sql',
+        label: 'Query with SQL',
+        icon: <Database size={18} />,
+        category: 'Query',
+        action: () => {
+          setQueryLanguage('sql');
+          if (!queryPanelOpen) toggleQueryPanel();
+          closeCommandPalette();
+        },
+      },
+      {
+        id: 'query-python',
+        label: 'Query with Python',
+        icon: <Code2 size={18} />,
+        category: 'Query',
+        action: () => {
+          setQueryLanguage('python');
+          if (!queryPanelOpen) toggleQueryPanel();
+          closeCommandPalette();
+        },
+      },
       
       // Preferences
       {
@@ -172,7 +212,7 @@ const CommandPalette = () => {
     ];
 
     return list;
-  }, [tabs, activeTabId, theme, closeCommandPalette, openFile, openFolder, addTab, getFileLanguage, setActiveTab, setTheme, toggleZenMode, toggleSettings]);
+  }, [tabs, activeTabId, theme, queryPanelOpen, closeCommandPalette, openFile, openFolder, addTab, getFileLanguage, setActiveTab, setTheme, toggleZenMode, toggleSettings, toggleQueryPanel, setQueryLanguage]);
 
   const filteredCommands = useMemo(() => {
     if (!searchQuery) return commands;

@@ -169,6 +169,111 @@ Based on research of 12 major text editors (Notepad++, Sublime Text, VS Code, At
 - Line count
 - Displayed in status bar
 
+### NEW: Query Panel - Data Analysis Inside Your Editor 🚀
+
+#### 17. SQL Query Support (DuckDB)
+- **File**: `src/components/QueryPanel/index.tsx`, `src/lib/duckdb.ts`
+- Run SQL queries directly on open files
+- Powered by DuckDB WebAssembly
+- Supports CSV, JSON, JSONL, Parquet files
+- Auto-detects file types and creates temp tables
+- Query execution time tracking
+- Results displayed in sortable table
+
+**Example queries:**
+```sql
+-- Query CSV data
+SELECT * FROM 'data.csv' LIMIT 100;
+
+-- Count rows
+SELECT COUNT(*) FROM 'data.csv';
+
+-- Describe schema
+DESCRIBE 'data.csv';
+
+-- Query JSON
+SELECT * FROM 'data.json';
+```
+
+#### 18. Python Script Support (Pyodide)
+- **File**: `src/components/QueryPanel/index.tsx`, `src/lib/pyodide.ts`
+- Execute Python code on file content
+- Powered by Pyodide (Python in WebAssembly)
+- Pre-loaded packages: pandas, numpy, pyyaml
+- Auto-injected variables: `content`, `data`, `file_path`
+- Helper functions: `load_json()`, `load_csv()`, `load_yaml()`, `save()`
+- Display matplotlib plots inline
+
+**Example scripts:**
+```python
+# Access file content
+print(f"Type: {type(data)}")
+print(f"Keys: {data.keys() if isinstance(data, dict) else 'N/A'}")
+
+# For CSV files - data is a pandas DataFrame
+print(f"Shape: {data.shape}")
+print(data.head())
+
+# Filter and analyze
+filtered = data[data['age'] > 30]
+print(f"Filtered rows: {len(filtered)}")
+
+# Create visualizations
+import matplotlib.pyplot as plt
+plt.figure(figsize=(8, 4))
+data['column'].hist()
+plt  # Display inline
+
+# Save changes back to file
+save(data.to_json())
+```
+
+#### 19. Results Viewer
+- **File**: `src/components/QueryPanel/ResultsViewer.tsx`
+- Table view with sorting and filtering
+- JSON tree view for Python dict/list results
+- Text output for print statements
+- Pagination (100 rows per page)
+- Export to CSV or JSON
+- Execution time display
+- Error display with syntax highlighting
+
+#### 20. Query History & Bookmarks
+- **File**: `src/components/QueryPanel/index.tsx`
+- Automatic history tracking (last 50 queries)
+- Per-file query history
+- Save frequently used queries as bookmarks
+- Named bookmarks for organization
+- Quick re-run from history
+
+#### 21. Query Panel UI
+- Collapsible panel (VS Code terminal-style)
+- Resizable height
+- Monaco editor for SQL/Python input with syntax highlighting
+- Language selector dropdown (SQL/Python)
+- Run button with loading state
+- Keyboard shortcuts: Ctrl/Cmd+Shift+Q (toggle), Ctrl/Cmd+Enter (run)
+
+### Supported File Types for Querying
+
+| File Type | SQL Support | Python Support | Default Action |
+|-----------|-------------|----------------|----------------|
+| CSV/TSV | ✅ Native | ✅ pandas DataFrame | Load as table |
+| JSON | ✅ Native | ✅ Auto-parsed | Load as object/dict |
+| JSONL | ✅ Native | ✅ Line-by-line | Load as array |
+| Parquet | ✅ Native | ✅ pandas DataFrame | Load as table |
+| TXT/LOG | ❌ | ✅ Text content | Raw text analysis |
+| XML | ❌ | ✅ ElementTree | Parse XML tree |
+| YAML/YML | ❌ | ✅ pyyaml | Parse YAML |
+
+### Query Panel Keyboard Shortcuts
+
+| Action | macOS | Windows/Linux |
+|--------|-------|---------------|
+| Toggle Query Panel | ⌘⇧Q | Ctrl+Shift+Q |
+| Run Query | ⌘↵ | Ctrl+Enter |
+| Run & Pin Results | ⌘⇧↵ | Ctrl+Shift+Enter |
+
 ## Technical Architecture
 
 ### State Management
@@ -202,26 +307,32 @@ Based on research of 12 major text editors (Notepad++, Sublime Text, VS Code, At
 text-editor/
 ├── src/
 │   ├── components/
-│   │   ├── Editor/           # Monaco editor wrapper
-│   │   ├── FileExplorer/     # (part of Sidebar)
-│   │   ├── Tabs/             # Tab bar component
-│   │   ├── Sidebar/          # Left sidebar with views
-│   │   ├── JSONViewer/       # JSON tree + text view
-│   │   ├── Search/           # (part of Sidebar)
-│   │   ├── StatusBar/        # Bottom status bar
-│   │   ├── CommandPalette/   # Quick commands modal
-│   │   └── Settings/         # Settings modal
+│   │   ├── Editor/              # Monaco editor wrapper
+│   │   ├── FileExplorer/        # (part of Sidebar)
+│   │   ├── Tabs/                # Tab bar component
+│   │   ├── Sidebar/             # Left sidebar with views
+│   │   ├── JSONViewer/          # JSON tree + text view
+│   │   ├── Search/              # (part of Sidebar)
+│   │   ├── StatusBar/           # Bottom status bar
+│   │   ├── CommandPalette/      # Quick commands modal
+│   │   ├── Settings/            # Settings modal
+│   │   └── QueryPanel/          # NEW: SQL/Python query panel
+│   │       ├── index.tsx        # Main query panel component
+│   │       └── ResultsViewer.tsx # Results display component
 │   ├── hooks/
-│   │   └── useEditor.ts      # Custom hooks
+│   │   └── useEditor.ts         # Custom hooks
+│   ├── lib/                     # NEW: Library integrations
+│   │   ├── duckdb.ts            # DuckDB WASM integration
+│   │   └── pyodide.ts           # Pyodide Python integration
 │   ├── stores/
-│   │   ├── editorStore.ts    # Editor state
-│   │   └── fileSystemStore.ts # File operations
+│   │   ├── editorStore.ts       # Editor state
+│   │   └── fileSystemStore.ts   # File operations
 │   ├── utils/
-│   │   └── helpers.ts        # Utility functions
-│   ├── themes/               # Theme definitions
-│   ├── App.tsx               # Main app
-│   └── main.tsx              # Entry point
-├── src-tauri/                # Rust backend
+│   │   └── helpers.ts           # Utility functions
+│   ├── themes/                  # Theme definitions
+│   ├── App.tsx                  # Main app
+│   └── main.tsx                 # Entry point
+├── src-tauri/                   # Rust backend
 │   ├── src/main.rs
 │   ├── Cargo.toml
 │   └── tauri.conf.json
@@ -261,8 +372,9 @@ npm run tauri:build
 2. **Native Performance** - Tauri provides native desktop performance
 3. **Small Bundle Size** - Much smaller than Electron-based editors
 4. **JSON Viewer** - Unique tree view for JSON files
-5. **Cross-Platform** - Works on macOS, Windows, and Linux
-6. **Extensible** - Easy to add new features and languages
+5. **Query Panel** - Built-in SQL and Python data analysis (like DataGrip + Jupyter!)
+6. **Cross-Platform** - Works on macOS, Windows, and Linux
+7. **Extensible** - Easy to add new features and languages
 
 ## Future Enhancements
 

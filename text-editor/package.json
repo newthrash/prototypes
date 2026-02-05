@@ -12,10 +12,12 @@
     "tauri:build": "tauri build"
   },
   "dependencies": {
+    "@duckdb/duckdb-wasm": "^1.33.1-dev18.0",
     "@monaco-editor/react": "^4.6.0",
     "@tauri-apps/api": "^1.5.3",
     "lucide-react": "^0.312.0",
     "monaco-editor": "^0.45.0",
+    "pyodide": "^0.29.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zustand": "^4.5.0"

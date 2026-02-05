@@ -6,6 +6,7 @@ import {
   Minimize,
   Zap,
   Bell,
+  Database,
 } from 'lucide-react';
 import { useEditorStore } from '../../stores/editorStore';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
@@ -23,6 +24,8 @@ const StatusBar = () => {
     setLineNumbers,
     wordWrap,
     setWordWrap,
+    queryPanelOpen,
+    toggleQueryPanel,
   } = useEditorStore();
   
   const { currentFolder } = useFileSystemStore();
@@ -164,6 +167,18 @@ const StatusBar = () => {
           title="Toggle Theme"
         >
           {theme === 'dark' ? 'Dark' : 'Light'}
+        </button>
+
+        {/* Query Panel Toggle */}
+        <button
+          onClick={toggleQueryPanel}
+          className={`px-2 py-0.5 rounded transition-colors flex items-center gap-1 ${
+            queryPanelOpen ? 'bg-white bg-opacity-20' : 'hover:bg-white hover:bg-opacity-20'
+          }`}
+          title="Toggle Query Panel (⌘⇧Q)"
+        >
+          <Database size={12} />
+          Query
         </button>
 
         {/* Zen Mode */}

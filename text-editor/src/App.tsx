@@ -8,15 +8,18 @@ import Editor from './components/Editor';
 import StatusBar from './components/StatusBar';
 import CommandPalette from './components/CommandPalette';
 import Settings from './components/Settings';
+import QueryPanel from './components/QueryPanel';
 
 function App() {
   const {
     isSidebarOpen,
     isZenMode,
     isSettingsOpen,
+    queryPanelOpen,
     toggleSidebar,
     openCommandPalette,
     toggleSettings,
+    toggleQueryPanel,
     addTab,
     tabs,
   } = useEditorStore();
@@ -41,6 +44,7 @@ function App() {
   useKeyBinding('mod+b', toggleSidebar);
   useKeyBinding('mod+shift+p', openCommandPalette);
   useKeyBinding('mod+,', toggleSettings);
+  useKeyBinding('mod+shift+q', toggleQueryPanel);
 
   // Apply theme
   useEffect(() => {
@@ -65,13 +69,16 @@ function App() {
         {!isZenMode && <TabBar />}
 
         {/* Editor Area */}
-        <div className="flex-1 relative">
+        <div className={`relative ${queryPanelOpen ? 'flex-1 min-h-0' : 'flex-1'}`}>
           {tabs.length === 0 ? (
             <WelcomeScreen onOpenFile={openFile} onOpenFolder={openFolder} />
           ) : (
             <Editor />
           )}
         </div>
+
+        {/* Query Panel */}
+        {queryPanelOpen && !isZenMode && <QueryPanel />}
 
         {/* Status Bar */}
         {!isZenMode && <StatusBar />}
@@ -164,10 +171,11 @@ function WelcomeScreen({
         )}
 
         <div className="mt-12 text-text-secondary text-sm">
-          <div className="flex gap-6 justify-center">
+          <div className="flex gap-6 justify-center flex-wrap">
             <span>⌘P Command Palette</span>
             <span>⌘B Toggle Sidebar</span>
             <span>⌘, Settings</span>
+            <span>⌘⇧Q Query Panel</span>
           </div>
         </div>
       </div>
