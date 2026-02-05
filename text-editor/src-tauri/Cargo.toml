@@ -1,0 +1,25 @@
+[package]
+name = "opentext"
+version = "1.0.0"
+description = "A modern cross-platform text editor"
+authors = ["OpenText Team"]
+edition = "2021"
+rust-version = "1.70"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "opentext"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "1.6", features = ["api-all", "fs-all", "shell-open", "dialog-all"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
